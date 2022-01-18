@@ -9,6 +9,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Objects;
+
 public class lockCmd implements CommandExecutor {
 
     @Override
@@ -16,14 +18,14 @@ public class lockCmd implements CommandExecutor {
 
         TownBlock plot = TownyAPI.getInstance().getTownBlock((Player) sender);
 
-        // cancel if you dont own the plot your in
-        try {
-            if (plot.getTownBlockOwner().getName() != sender.getName()) {
-                sender.sendMessage("§6[Towny] §cYou don't own this plot!");
-                return false;
-            }
-        } catch (NullPointerException e) {
+        if (plot == null) {
             sender.sendMessage("§6[Towny] &cYou are not standing in a plot!");
+            return false;
+        }
+
+        // cancel if you dont own the plot your in
+        if (!(Objects.requireNonNull(plot.getTownBlockOwner()).getName().equalsIgnoreCase(sender.getName()))) {
+            sender.sendMessage("§6[Towny] §cYou don't own this plot, " + plot.getTownBlockOwner().getName() + " does!");
             return false;
         }
 
