@@ -1,0 +1,5 @@
+name: TownyPlotLock
+version: '${project.version}'
+main: net.mcblockbuilds.townyplotlock.TownyPlotLock
+api-version: 1.16
+depend: [Towny]
