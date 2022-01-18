@@ -42,13 +42,13 @@ public class lockCmd implements CommandExecutor {
 
                 // Update the value
                 bdf.setValue(true);
-                sender.sendMessage("§6[Towny] &aPlot has been locked, outlaws will no longer be able to enter.");
+                sender.sendMessage("§6[Towny] §aPlot has been locked, outlaws will no longer be able to enter.");
                 return true;
             }
         }
 
         // Add meta field
-        sender.sendMessage("§6[Towny] &aPlot has been locked, outlaws will no longer be able to enter.");
+        sender.sendMessage("§6[Towny] §aPlot has been locked, outlaws will no longer be able to enter.");
         BooleanDataField newData = new BooleanDataField("locked", true);
         plot.addMetaData(newData);
         return true;
