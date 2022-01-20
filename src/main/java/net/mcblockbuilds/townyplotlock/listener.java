@@ -3,10 +3,8 @@ package net.mcblockbuilds.townyplotlock;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.event.PlayerChangePlotEvent;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
-import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import com.palmergames.bukkit.towny.object.metadata.BooleanDataField;
-import com.palmergames.bukkit.towny.object.metadata.CustomDataField;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -20,70 +18,34 @@ public class listener implements Listener {
     }
 
     @EventHandler
-    public void onPlotEnter(PlayerChangePlotEvent event) {
+    public void onPlotEnter(PlayerChangePlotEvent event) throws NotRegisteredException {
+        if (!(event.getTo().hasTownBlock())) return; // Make sure player is in a town
 
-        if (event.getPlayer().hasPermission("towny.bypasslockedplots")) {
-            return;
-        }
+        TownBlock plot = event.getTo().getTownBlock();
 
-        TownBlock plot;
+        if (event.getPlayer().hasPermission("towny.bypasslockedplots")) return; // Let staff bypass
+        if (!(plot.getTown().hasOutlaw(event.getPlayer().getName()))) return; // Check if player is even an outlaw
 
-        try {
-            plot = event.getTo().getTownBlock();
-        } catch (NotRegisteredException e) {
-            return;
-        }
+        if (!(plot.hasMeta("locked"))) return; // Check if plot has locked meta set
+        if (!(((BooleanDataField) plot.getMetadata("locked")).getValue())) return; // Check if plots locked
 
-        //TownBlock plot = TownyAPI.getInstance().getTownBlock(event.getPlayer());
+        // Fling the player out of the plot
+        event.getPlayer().sendMessage("§cOutlaws are not allowed to enter this plot!");
+        event.getPlayer().setVelocity(event.getPlayer().getLocation().getDirection().multiply(-1));
 
-        if (plot == null) {
-            return;
-        }
-
-        BooleanDataField meta = new BooleanDataField("locked", true);
-
-        // Check that the town has the metadata key.
-        if (plot.hasMeta(meta.getKey())) {
-            // Get the metadata from the town using the key.
-            CustomDataField cdf = plot.getMetadata(meta.getKey());
-            // Check that it's an IntegerDataField
-            if (cdf instanceof BooleanDataField) {
-                // Cast to StringDataField
-                BooleanDataField bdf = (BooleanDataField) cdf;
-
-                // Check if plots locked
-                if (bdf.getValue() == true) {
-
-                    Town town;
-                    try {
-                        town = plot.getTown();
-                    } catch (NotRegisteredException e) {
-                        return;
-                    }
-
-                    if (town.hasOutlaw(event.getPlayer().getName())) {
-
-                        event.getPlayer().sendMessage("§cOutlaws are not allowed to enter this plot!");
-                        event.getPlayer().setVelocity(event.getPlayer().getLocation().getDirection().multiply(-1));
-
-                        getServer().getScheduler().runTaskLater(plugin, new Runnable() {
-                            @Override
-                            public void run() {
-                                if (TownyAPI.getInstance().getTownBlock(event.getPlayer()) == plot) { // If player still in plot
-                                    event.getPlayer().sendMessage("§cOutlaws are not allowed to enter this plot!");
-                                    event.getPlayer().teleport(event.getMoveEvent().getFrom());
-                                }
-
-                            }
-                        }, 20);
-
-                    }
-
-
+        // If the player managed to stay in the plot 1 second later, teleport them out
+        getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                if (TownyAPI.getInstance().getTownBlock(event.getPlayer()) == plot) { // If player still in plot
+                                event.getPlayer().sendMessage("§cOutlaws are not allowed to enter this plot!");
+                                event.getPlayer().teleport(event.getMoveEvent().getFrom());
                 }
+
             }
-        }
+        }, 20);
 
     }
+
 
 }
